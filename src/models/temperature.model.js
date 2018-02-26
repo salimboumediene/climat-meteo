@@ -1,22 +1,19 @@
-import { Model } from "./model.model.";
+import {Model} from"./model.model";
+/**
+ * @type{Temperature}
+ */
 
+export class Temperature extends Model {
 
-
-export class Temperature extends Model{
-    
-
-      /**
-       * @constructor
-       */
-     constructor (temperature) {
-
-      super({
-           temperature : temperature,
-           min : 0,
-           max : 0
-
-      });
-
+    /**
+     * @constructor
+     * @param {Temperature} temperature
+     */
+    constructor(){
+       super({
+        min: 0,
+        max: 0,
+        temp: 0
+       });
     }
-
 }

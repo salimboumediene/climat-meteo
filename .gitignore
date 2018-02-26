@@ -3,4 +3,5 @@ dist/
 index.json
 index.mdj
 node_modules/
-poc/
+formulaire.html
+package-lock.json

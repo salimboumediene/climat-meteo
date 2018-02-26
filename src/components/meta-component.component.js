@@ -1,35 +1,28 @@
 import { Component } from "./component.component";
 
 /**
- * @type {Component}
+ * @type{MetaComponent}
  */
+
 export class MetaComponent extends Component {
-    
-    /**
-     * @constructor
-     */
-    constructor(){
+/**
+ * @constructor
+ */
+    constructor() {
         super();
-        this.component
+        this.component;
     }
 
-
-        /**
-         * @returns{HTMLElement}
-         */
-
-        render () {
-            super.render();
-         if (this.component){
-             for(
-                 let i=0, l = this.component.length;
-
-                i < l;
-                 
-                this.component[i].render(), i++);
+/**
+     * 
+     * @returns {HTMLElement}  
+     */
+    render (){
+        super.render();
+        if (this.component){
+            for (let i=0; i <this.component.length; i++){
+                this.component[i].render();
             }
-         }
-            
-
-    
+        }
+    }
 }

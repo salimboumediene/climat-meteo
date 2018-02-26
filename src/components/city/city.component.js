@@ -1,116 +1,139 @@
 import {Component} from "./../component.component";
 import {default as template} from "./city.component.html";
 
-export class City extends Component{
+/**
+ * @type {City}
+ */
 
+export class City extends Component {
 
-    /**
-     * 
-     * @param {*} cityModel 
-     * @param {*} apiOpenWeather 
-     */
-    constructor(model, api){
-
-        
+ /**
+  * @constructor
+  * @param {Model} model 
+  * @param {ApiToken} api 
+  * @param {Hydrator} hydrator
+  */
+    constructor (model, api, hydrator){
         super();
         this.selector = "city";
         this.template = template;
-
-        /**
-         * @returns {Models}
-         * 
-         */
-        this.getModel = () => {
+        this.getModel = ()=>{
             return model;
         }
-
-        
-        /**
-         * @returns {ApiToken}
-         * 
-         */
-        this.getApi = () => {
+        this.getApi = ()=>{
             return api;
         }
-
+        this.getHydrator = ()=>{
+            return hydrator;
+        }
         this.geolocation();
     }
-    
 
-    geolocation()  {
-        
+    geolocation(){
         navigator.geolocation.getCurrentPosition(
-           (e) => {
-               this.geolocationSuccess (e.coords.latitude, e.coords.longitude)
+            (e)=>{
+                this.api(e.coords.latitude, e.coords.longitude);
             },
-           (e) => {
-               this.getModel().set("name", "-");
-               this.render();
-               this.exception("Geolocation", "Can't determined yout position");
-           },
-        
+            (e)=>{
+                this.exception("Geolocation","Can't determine your position");
+
+            },
         );
-    
     }
-
     
-
-    exception(title, message, btnText, confirm)  {
-        window.ui.dialog.alert(title,message).onconfirm(btnText, confirm);
-        
-
-    }
-
-    geolocationSuccess(lat, lng)  {
-        var xhr = new XMLHttpRequest;
-        xhr.open("GET", this.getApi().getEndPoint(lat, lng));
-            //   xhr.onreadystatechange = function (e) {
-            //        //cette methode nous permet de connaitre toutes les étapes de notre requete: create, ouvrir, send, reception, resolve.
-            //        console.log(this.readyState);
-            //    };
-            xhr.onload = () => {
-                if(200 == xhr.status) {
-                    //transformer du texte en Object
-                    let reponse = window.JSON.parse(xhr.response);
-
-                    this.getModel().set("name", reponse.name);
-                    this.getModel().set("sunset", reponse.name);
-                    this.getModel().set("sunrise", reponse.name);
-                    this.getModel().get("climat").set("humidity", reponse.main.humidity);
-                    this.getModel().get("climat").set("wind", reponse.wind.speed);
-                    this.getModel().get("climat").set("pression", reponse.main.pressure);
-                    this.getModel().get("climat").set("description", reponse.weather[0].main);
-                    this.getModel().get("climat").get("temperature").set("temperature", reponse.main.temp);
-                    this.getModel().get("climat").get("temperature").set("min", reponse.main.temp_min);
-                    this.getModel().get("climat").get("temperature").set("max", reponse.main.temp_max);
-                    
-                    this.render();
-
-                return;
-            }
-        xhr.onerror();
-    };
-
-    xhr.onerror = () => {
+    api(lat, lng){//cette function nous permet d'appeler l'api et d'etre detectert par la latitude et longitude
         this.getModel().set("name", "-");
+        this.render();
+        // faire une requete
+   var xhr = new XMLHttpRequest;
+   xhr.open("GET", this.getApi().getEndPoint(lat,lng));
+   xhr.onload = ()=>{
+        if (200 == xhr.status){
+           //transformer du texte en JSON
+           
+            this.getHydrator().hydrate(
+                this.getModel(),
+                window.JSON.parse(xhr.response)
+            );
             this.render();
+
+            return;
+        }
+        xhr.onerror();
+   };
+   xhr.onerror = ()=>{
+    this.exception(
+        "Informations",
+        "Can't read information",
+        "Retry",
+         ()=> {this.api(lat,lng);}
+        
+    )
+   };
+   xhr.send();
+
+    }
+
+    /**
+     * 
+     * @param {String} name 
+     */
+    cityNameEndPoint (name){//cette function nous permet d'appeler l'api au moment ou entre une ville
+        var xhr = new XMLHttpRequest;
+   xhr.open("GET", this.getApi().getCityEndPoint(name));
+   xhr.onload = ()=>{
+    if (200 == xhr.status){
+       //transformer du texte en JSON
+       
+        this.getHydrator().hydrate(
+            this.getModel(),
+            window.JSON.parse(xhr.response)
+        );
+        this.render();
+
+        return;
+    }
+    xhr.onerror();
+    };
+    xhr.onerror = ()=>{
+        this.getHydrator().deshydrate(this.getModel());
         this.exception(
-            "Information",
+            "Informations",
             "Can't read information",
-            "retry",
-    () => {this.geolocationSuccess (lat, lng);}
-    );
+            "Retry",
+        ()=> {this.geolocation();}
+        
+    )
     };
     xhr.send();
-    }
 
-    render() {
+}
+
+    exception(title, message, btnText,confirm){    
+        this.getModel().set("name", "-");
+        window.ui.dialog.alert(title, message)
+        .onconfirm(btnText, confirm);
+        this.render();
+        
+    }
+    
+    render (){
+        
         let elements = super.render([this.getModel()]);
-        for (
-            let i= 0 , l = elements.length ;
-             i < l ; 
-            window.componentHandler.downgradeElements(elements[i]),
-            window.componentHandler.upgradeDom(), i++);
+       
+        for (let i = 0; i<elements.length; i++){
+        window.componentHandler.downgradeElements(elements[i]);
+        window.componentHandler.upgradeDom();
+        //récupération de la ville recherchée
+        let input = elements[i].getElementsByTagName("input")[0];
+        
+        //quelle touche est pressée
+        input.onkeypress = (e) => {
+            
+            if (13==e.keyCode){
+                this.cityNameEndPoint(input.value);
+            }
+        }
     }
-
+    }
 }

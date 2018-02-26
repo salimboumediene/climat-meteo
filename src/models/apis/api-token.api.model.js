@@ -1,17 +1,19 @@
-import { Model } from "../model.model.";
+import { Model } from "../model.model";
 
 /**
- * @type {ApiToken}
+ * @type{ApiToken}
  */
+
 export class ApiToken extends Model{
+
     /**
      * @constructor
      * @param {String} token 
      */
-    constructor (token) {
+    constructor(token){
         super({
-            token : token
+            token: token
         })
+        
     }
-
 }
